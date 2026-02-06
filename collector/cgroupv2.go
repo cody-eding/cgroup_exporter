@@ -218,6 +218,7 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 				continue
 			}
 			// skip paths ending in slurm
+			// i.e. /system.slice/slurmstepd.scope/job_223344/step_batch/slurm
 			if strings.Contains(path, "slurm") && strings.HasSuffix(name, "/slurm") {
 				level.Debug(e.logger).Log("msg", "Skip slurm cgroup", "name", name)
 				continue
