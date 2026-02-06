@@ -29,17 +29,13 @@ import (
 )
 
 var (
-	collectProc        = kingpin.Flag("collect.proc", "Boolean that sets if to collect proc information").Default("false").Bool()
 	CgroupRoot         = kingpin.Flag("path.cgroup.root", "Root path to cgroup fs").Default(defCgroupRoot).String()
-	collectProcMaxExec = kingpin.Flag("collect.proc.max-exec", "Max length of process executable to record").Default("100").Int()
-	ProcRoot           = kingpin.Flag("path.proc.root", "Root path to proc fs").Default(defProcRoot).String()
 	metricLock         = sync.RWMutex{}
 )
 
 const (
 	Namespace     = "cgroup"
 	defCgroupRoot = "/sys/fs/cgroup"
-	defProcRoot   = "/proc"
 )
 
 type Collector interface {
@@ -65,9 +61,7 @@ type Exporter struct {
 	memswTotal      *prometheus.Desc
 	memswFailCount  *prometheus.Desc
 	info            *prometheus.Desc
-	processExec     *prometheus.Desc
 	logger          log.Logger
-	cgroupv2        bool
 }
 
 type CgroupMetric struct {
@@ -90,7 +84,6 @@ type CgroupMetric struct {
 	uid             string
 	username        string
 	jobid           string
-	processExec     map[string]float64
 	err             bool
 }
 
@@ -129,8 +122,6 @@ func NewExporter(paths []string, logger log.Logger) *Exporter {
 			"Swap fail count", []string{"cgroup", "jobid"}, nil),
 		info: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "", "info"),
 			"User slice information", []string{"cgroup", "username", "uid", "jobid"}, nil),
-		processExec: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "", "process_exec_count"),
-			"Count of instances of a given process", []string{"cgroup", "exec"}, nil),
 		collectError: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "exporter", "collect_error"),
 			"Indicates collection error, 0=no error, 1=error", []string{"cgroup"}, nil),
 		logger:   logger,
@@ -152,9 +143,6 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.memswTotal
 	ch <- e.memswFailCount
 	ch <- e.info
-	if *collectProc {
-		ch <- e.processExec
-	}
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
@@ -180,52 +168,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		if m.userslice || m.job {
 			ch <- prometheus.MustNewConstMetric(e.info, prometheus.GaugeValue, 1, m.name, m.username, m.uid, m.jobid)
 		}
-		if *collectProc {
-			for exec, count := range m.processExec {
-				ch <- prometheus.MustNewConstMetric(e.processExec, prometheus.GaugeValue, count, m.name, exec)
-			}
-		}
 	}
-}
-
-func getProcInfo(pids []int, metric *CgroupMetric, logger log.Logger) {
-	executables := make(map[string]float64)
-	procFS, err := procfs.NewFS(*ProcRoot)
-	if err != nil {
-		level.Error(logger).Log("msg", "Unable to open procfs", "path", *ProcRoot)
-		return
-	}
-	wg := &sync.WaitGroup{}
-	wg.Add(len(pids))
-	for _, pid := range pids {
-		go func(p int) {
-			proc, err := procFS.Proc(p)
-			if err != nil {
-				level.Error(logger).Log("msg", "Unable to read PID", "pid", p)
-				wg.Done()
-				return
-			}
-			executable, err := proc.Executable()
-			if err != nil {
-				level.Error(logger).Log("msg", "Unable to get executable for PID", "pid", p)
-				wg.Done()
-				return
-			}
-			if len(executable) > *collectProcMaxExec {
-				level.Debug(logger).Log("msg", "Executable will be truncated", "executable", executable, "len", len(executable), "pid", p)
-				trim := *collectProcMaxExec / 2
-				executable_prefix := executable[0:trim]
-				executable_suffix := executable[len(executable)-trim:]
-				executable = fmt.Sprintf("%s...%s", executable_prefix, executable_suffix)
-			}
-			metricLock.Lock()
-			executables[executable] += 1
-			metricLock.Unlock()
-			wg.Done()
-		}(pid)
-	}
-	wg.Wait()
-	metric.processExec = executables
 }
 
 func parseCpuSet(cpuset string) ([]string, error) {
