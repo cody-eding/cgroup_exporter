@@ -258,6 +258,7 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 					pids[name] = []int{pid}
 				}
 			}
+		}
 		wg := &sync.WaitGroup{}
 		wg.Add(len(names))
 		for _, name := range names {
