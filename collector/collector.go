@@ -161,7 +161,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		if m.err {
 			ch <- prometheus.MustNewConstMetric(e.collectError, prometheus.GaugeValue, 1, m.name)
 		}
-		ch <- prometheus.MustNewConstMetric(e.uid, prometheus.GaugeValue, m.uid, m.jobid)
+		ch <- prometheus.MustNewConstMetric(e.uid, prometheus.GaugeValue, float64(m.uid), m.jobid)
 		ch <- prometheus.MustNewConstMetric(e.cpuUser, prometheus.GaugeValue, m.cpuUser, m.name, m.jobid)
 		ch <- prometheus.MustNewConstMetric(e.cpuSystem, prometheus.GaugeValue, m.cpuSystem, m.name, m.jobid)
 		ch <- prometheus.MustNewConstMetric(e.cpuTotal, prometheus.GaugeValue, m.cpuTotal, m.name, m.jobid)
