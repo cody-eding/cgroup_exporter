@@ -86,21 +86,18 @@ func getInfov2(basename string, name string, pids []int, metric *CgroupMetric, l
 	return
 }
 
-func getNamev2(pidPath string, path string, logger log.Logger) (string, string) {
+func getNamev2(pidPath string, path string, logger log.Logger) string {
 	dirs := strings.Split(pidPath, "/")
-	var basename string
 	var name string
 	if strings.Contains(path, "slurm") {
 		keepDirs := dirs[0:4]
-		basename = strings.Join(keepDirs, "/")
-		name = pidPath
+		name = strings.Join(keepDirs, "/")
 	} else {
 		keepDirs := dirs[0:3]
-		basename = strings.Join(keepDirs, "/")
-		name = pidPath
+		name = strings.Join(keepDirs, "/")
 	}
 	level.Info(logger).Log("msg", "Get name from path", "name", name, "pidPath", pidPath, "path", path, "dirs", fmt.Sprintf("+%v", dirs))
-	return basename, name
+	return pidPath
 }
 
 
@@ -129,7 +126,7 @@ func getStatv2(name string, path string) (float64, error) {
 	return 0, fmt.Errorf("unable to find stat key %s in %s", name, path)
 }
 
-func (e *Exporter) getMetricsv2(basename string, name string, pids []int, opts cgroup2.InitOpts) (CgroupMetric, error) {
+func (e *Exporter) getMetricsv2(name string, pids []int, opts cgroup2.InitOpts) (CgroupMetric, error) {
 	metric := CgroupMetric{name: name}
 	level.Debug(e.logger).Log("msg", "Loading cgroup", "path", name)
 	ctrl, err := cgroup2.Load(name, opts)
@@ -217,7 +214,7 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 				continue
 			}
 			level.Debug(e.logger).Log("msg", "Get Name", "pid", pid, "path", path)
-			basename, name := getNamev2(pidPath, path, e.logger)
+			name := getNamev2(pidPath, path, e.logger)
 			if strings.Contains(path, "slurm") && filepath.Base(name) == "system" {
 				level.Debug(e.logger).Log("msg", "Skip system cgroup", "name", name)
 				continue
@@ -252,7 +249,7 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 					level.Error(e.logger).Log("msg", "Unable to get PIDs for name", "name", n)
 					return
 				}
-				metric, _ := e.getMetricsv2(basename, n, pids, opts)
+				metric, _ := e.getMetricsv2(n, pids, opts)
 				metricLock.Lock()
 				metrics = append(metrics, metric)
 				metricLock.Unlock()
