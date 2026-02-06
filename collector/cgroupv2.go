@@ -36,7 +36,6 @@ var (
 )
 
 func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger) {
-	pathBase := filepath.Base(name)
 	slurmPattern := regexp.MustCompile("/job_([0-9]+)(/step_([^/]+)(/user/task_([0-9]+|special))?)?$")
 	slurmMatch := slurmPattern.FindStringSubmatch(name)
 	if len(slurmMatch) == 6 {
