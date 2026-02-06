@@ -126,8 +126,8 @@ func NewExporter(paths []string, logger log.Logger) *Exporter {
 			"Swap total given to cgroup in bytes", []string{"cgroup", "jobid", "step", "task"}, nil),
 		memswFailCount: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "memsw", "fail_count"),
 			"Swap fail count", []string{"cgroup", "jobid", "step", "task"}, nil),
-		info: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "", "info"),
-			"User slice information", []string{"cgroup", "username", "uid", "jobid"}, nil),
+		// info: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "", "info"),
+		// 	"User slice information", []string{"cgroup", "username", "uid", "jobid"}, nil),
 		collectError: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "exporter", "collect_error"),
 			"Indicates collection error, 0=no error, 1=error", []string{"cgroup"}, nil),
 		logger:   logger,
@@ -149,7 +149,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.memswUsed
 	ch <- e.memswTotal
 	ch <- e.memswFailCount
-	ch <- e.info
+	//ch <- e.info
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
@@ -178,7 +178,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(e.memoryFailCount, prometheus.GaugeValue, m.memoryFailCount, m.name, m.jobid, m.step, m.task)
 		ch <- prometheus.MustNewConstMetric(e.memswUsed, prometheus.GaugeValue, m.memswUsed, m.name, m.jobid, m.step, m.task)
 		ch <- prometheus.MustNewConstMetric(e.memswTotal, prometheus.GaugeValue, m.memswTotal, m.name, m.jobid, m.step, m.task)
-		ch <- prometheus.MustNewConstMetric(e.info, prometheus.GaugeValue, 1, m.name, m.username, m.uid, m.jobid)
+		//ch <- prometheus.MustNewConstMetric(e.info, prometheus.GaugeValue, 1, m.name, m.username, m.uid, m.jobid)
 	}
 }
 
