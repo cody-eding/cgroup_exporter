@@ -88,6 +88,7 @@ func getInfov2(basename string, name string, pids []int, metric *CgroupMetric, l
 
 func getNamev2(pidPath string, path string, logger log.Logger) string {
 	dirs := strings.Split(pidPath, "/")
+	var basename string
 	var name string
 	if strings.Contains(path, "slurm") {
 		keepDirs := dirs[0:4]
