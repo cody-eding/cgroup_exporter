@@ -95,7 +95,7 @@ type CgroupMetric struct {
 }
 
 func NewCgroupV2Collector(paths []string, logger log.Logger) Collector {
-	return NewExporter(paths, logger, true)
+	return NewExporter(paths, logger)
 }
 
 func NewExporter(paths []string, logger log.Logger) *Exporter {
