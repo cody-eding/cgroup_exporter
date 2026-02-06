@@ -88,7 +88,7 @@ func getNamev2(pidPath string, path string, logger log.Logger) string {
 	var name string
 	// if strings.Contains(path, "slurm") {
 	// keepDirs := dirs[2:]
-	..name = strings.Join(keepDirs, "/")
+	//name = strings.Join(keepDirs, "/")
 	// } else {
 	// 	keepDirs := dirs[0:3]
 	// 	name = strings.Join(keepDirs, "/")
