@@ -179,45 +179,6 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func getProcInfo(pids []int, metric *CgroupMetric, logger log.Logger) {
-	executables := make(map[string]float64)
-	procFS, err := procfs.NewFS(*ProcRoot)
-	if err != nil {
-		level.Error(logger).Log("msg", "Unable to open procfs", "path", *ProcRoot)
-		return
-	}
-	wg := &sync.WaitGroup{}
-	wg.Add(len(pids))
-	for _, pid := range pids {
-		go func(p int) {
-			proc, err := procFS.Proc(p)
-			if err != nil {
-				level.Error(logger).Log("msg", "Unable to read PID", "pid", p)
-				wg.Done()
-				return
-			}
-			executable, err := proc.Executable()
-			if err != nil {
-				level.Error(logger).Log("msg", "Unable to get executable for PID", "pid", p)
-				wg.Done()
-				return
-			}
-			if len(executable) > *collectProcMaxExec {
-				level.Debug(logger).Log("msg", "Executable will be truncated", "executable", executable, "len", len(executable), "pid", p)
-				trim := *collectProcMaxExec / 2
-				executable_prefix := executable[0:trim]
-				executable_suffix := executable[len(executable)-trim:]
-				executable = fmt.Sprintf("%s...%s", executable_prefix, executable_suffix)
-			}
-			metricLock.Lock()
-			executables[executable] += 1
-			metricLock.Unlock()
-			wg.Done()
-		}(pid)
-	}
-	wg.Wait()
-}
-
 func parseCpuSet(cpuset string) ([]string, error) {
 	var cpus []string
 	var start, end int
