@@ -86,7 +86,7 @@ func getInfov2(basename string, name string, pids []int, metric *CgroupMetric, l
 	return
 }
 
-func getNamev2(pidPath string, path string, logger log.Logger) string, string {
+func getNamev2(pidPath string, path string, logger log.Logger) (string, string) {
 	dirs := strings.Split(pidPath, "/")
 	var basename string
 	var name string
