@@ -65,9 +65,10 @@ type Exporter struct {
 	memswTotal      *prometheus.Desc
 	memswFailCount  *prometheus.Desc
 	info            *prometheus.Desc
+	uid				*prometheus.Desc
 	processExec     *prometheus.Desc
 	logger          log.Logger
-	cgroupv2        bool
+	//cgroupv2        bool
 }
 
 type CgroupMetric struct {
@@ -90,6 +91,8 @@ type CgroupMetric struct {
 	uid             string
 	username        string
 	jobid           string
+	step  			string
+	task  			string
 	processExec     map[string]float64
 	err             bool
 }
