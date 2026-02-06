@@ -88,19 +88,16 @@ func getNamev2(pidPath string, path string, logger log.Logger) string {
 	dirs := strings.Split(pidPath, "/")
 	var name string
 	if strings.Contains(path, "slurm") {
-		keepDirs := dirs
-		if len(dirs) > 0 && strings.ToLower(dirs[len(dirs)-1]) == "slurm" {
-			keepDirs = dirs[0:len(dirs)-1]
-		}
+		keepDirs := dirs[0:4]
 		name = strings.Join(keepDirs, "/")
 	} else {
 		keepDirs := dirs[0:3]
 		name = strings.Join(keepDirs, "/")
 	}
-
-	level.Info(logger).Log("msg", "Get name from path", "name", name, "pidPath", pidPath, "path", path, "dirs", fmt.Sprintf("+%v", dirs))
+	level.Debug(logger).Log("msg", "Get name from path", "name", name, "pidPath", pidPath, "path", path, "dirs", fmt.Sprintf("+%v", dirs))
 	return pidPath
 }
+
 
 func getStatv2(name string, path string) (float64, error) {
 	if !fileExists(path) {
