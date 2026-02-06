@@ -81,6 +81,8 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 		}
 		metric.username = user.Username
 		return
+	} else {
+		return nil
 	}
 }
 
