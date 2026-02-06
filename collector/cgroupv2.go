@@ -55,6 +55,8 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 	if len(slurmMatch) == 6 {
 		metric.job = true
 		metric.jobid = slurmMatch[1]
+		metric.step = slurmMatch[3]
+		metric.task = slurmMatch[5]
 		procFS, err := procfs.NewFS(*ProcRoot)
 		if err != nil {
 			level.Error(logger).Log("msg", "Unable to get procfs", "root", *ProcRoot, "err", err)
