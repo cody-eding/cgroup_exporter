@@ -196,12 +196,7 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 	var metrics []CgroupMetric
 	for _, path := range e.paths {
 		var group string
-		// Allows previous cgroupv1 path to work as default for cgroupv2 path
-		if path == "/slurm" {
-			group = "/system.slice/slurmstepd.scope"
-		} else {
-			group = path
-		}
+		group = path
 		level.Debug(e.logger).Log("msg", "Loading cgroup", "path", path, "group", group, "root", *CgroupRoot)
 		//TODO
 		//control, err := cgroup2.LoadSystemd(path, group)
