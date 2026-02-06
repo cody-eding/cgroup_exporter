@@ -237,11 +237,11 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 			nameList := getNamev2(pidPath, path, e.logger)
 			for _, name := range nameList {
 				if strings.Contains(path, "slurm") && filepath.Base(name) == "system" {
-					level.Info(e.logger).Log("msg", "Skip system cgroup", "name", name)
+					level.Debug(e.logger).Log("msg", "Skip system cgroup", "name", name)
 					continue
 				}
 				if strings.Contains(path, "slurm") && strings.HasSuffix(name, "/slurm") {
-					level.Info(e.logger).Log("msg", "Skip slurm cgroup", "name", name)
+					level.Debug(e.logger).Log("msg", "Skip slurm cgroup", "name", name)
 					continue
 				}
 				if !sliceContains(names, name) {
@@ -269,7 +269,6 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 					level.Error(e.logger).Log("msg", "Unable to get PIDs for name", "name", n)
 					return
 				}
-				level.Error(e.logger).Log("msg", n)
 				metric, _ := e.getMetricsv2(n, pids, opts)
 				metricLock.Lock()
 				metrics = append(metrics, metric)
