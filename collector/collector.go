@@ -104,6 +104,8 @@ func NewCgroupV2Collector(paths []string, logger log.Logger) Collector {
 func NewExporter(paths []string, logger log.Logger) *Exporter {
 	return &Exporter{
 		paths: paths,
+		uid: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "", "uid"),
+			"Uid number of user running this job", []string{"jobid"}, nil),
 		cpuUser: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "cpu", "user_seconds"),
 			"Cumalitive CPU user seconds for cgroup", []string{"cgroup", "jobid"}, nil),
 		cpuSystem: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "cpu", "system_seconds"),
