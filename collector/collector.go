@@ -143,6 +143,7 @@ func NewExporter(paths []string, logger log.Logger) *Exporter {
 }
 
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	ch <- e.uid
 	ch <- e.cpuUser
 	ch <- e.cpuSystem
 	ch <- e.cpuTotal
