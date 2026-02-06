@@ -181,7 +181,9 @@ func (e *Exporter) getMetricsv2(name string, pids []int, opts cgroup2.InitOpts) 
 		return metric, err
 	}
 	if stats.Memory != nil {
-		metric.memoryRSS = float64(stats.Memory.Anon) // removed + swapcached + float64(stats.Memory.File) as this was just giving us Usage
+		// until slurm 25.11.1 fixes this
+		//metric.memoryRSS = float64(stats.Memory.Anon) + swapcached + float64(stats.Memory.File)
+		metric.memoryRSS = float64(stats.Memory.Usage) - float64(stats.Memory.File)
 		metric.memoryUsed = float64(stats.Memory.Usage)
 		metric.memoryTotal = float64(stats.Memory.UsageLimit)
 		metric.memoryCache = float64(stats.Memory.File)
