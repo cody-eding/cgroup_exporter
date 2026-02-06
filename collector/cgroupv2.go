@@ -39,12 +39,10 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 	slurmPattern := regexp.MustCompile("/job_([0-9]+)(/step_([^/]+)(/user/task_([0-9]+|special))?)?$")
 	slurmMatch := slurmPattern.FindStringSubmatch(name)
 	level.Info(logger).Log("msg", "Got for match", "name", name, "len(slurmMatch)", len(slurmMatch), "slurmMatch", fmt.Sprintf("%v", slurmMatch))
-	if len(slurmMatch) == 6 {
-		level.Info(logger).Log("msg", "Six matches!")
+	if len(slurmMatch) == 2 {
+		level.Info(logger).Log("msg", "Two  matches!")
 		metric.job = true
 		metric.jobid = slurmMatch[1]
-		metric.step = slurmMatch[3]
-		metric.task = slurmMatch[5]
 		procFS, err := procfs.NewFS(*ProcRoot)
 		if err != nil {
 			level.Error(logger).Log("msg", "Unable to get procfs", "root", *ProcRoot, "err", err)
@@ -80,8 +78,12 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 			return
 		}
 		metric.username = user.Username
-		return
 	}
+	if len(slurmMatch) == 6 {
+		metric.step = slurmMatch[3]
+		metric.task = slurmMatch[5]
+	}
+	return
 }
 
 func getNamev2(pidPath string, path string, logger log.Logger) string {
