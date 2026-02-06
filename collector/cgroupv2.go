@@ -40,6 +40,7 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 	slurmMatch := slurmPattern.FindStringSubmatch(name)
 	level.Info(logger).Log("msg", "Got for match", "name", name, "len(slurmMatch)", len(slurmMatch), "slurmMatch", fmt.Sprintf("%v", slurmMatch))
 	if len(slurmMatch) == 6 {
+		level.Info(logger).Log("msg", "Six matches!")
 		metric.job = true
 		metric.jobid = slurmMatch[1]
 		metric.step = slurmMatch[3]
