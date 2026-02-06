@@ -104,7 +104,7 @@ func getNamev2(pidPath string, path string, logger log.Logger) string {
 		name = strings.Join(keepDirs, "/")
 	}
 	level.Info(logger).Log("msg", "Get name from path", "name", name, "pidPath", pidPath, "path", path, "dirs", fmt.Sprintf("+%v", dirs))
-	return name
+	return pidPath
 }
 
 
