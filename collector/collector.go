@@ -156,6 +156,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	var metrics []CgroupMetric
 	metrics, _ = e.collectv2()
 
+	level.Info(logger).Log("msg", metrics)
+
 	for _, m := range metrics {
 		if m.err {
 			ch <- prometheus.MustNewConstMetric(e.collectError, prometheus.GaugeValue, 1, m.name)
