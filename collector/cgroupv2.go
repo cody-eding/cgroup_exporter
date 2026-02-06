@@ -217,6 +217,11 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 				level.Debug(e.logger).Log("msg", "Skip system cgroup", "name", name)
 				continue
 			}
+			// skip paths ending in slurm
+			if strings.Contains(path, "slurm") && strings.HasSuffix(name, "/slurm") {
+				level.Debug(e.logger).Log("msg", "Skip slurm cgroup", "name", name)
+				continue
+			}
 			if !sliceContains(names, name) {
 				names = append(names, name)
 			}
