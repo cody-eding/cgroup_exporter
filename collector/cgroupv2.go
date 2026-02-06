@@ -95,7 +95,7 @@ func getNamev2(pidPath string, path string, logger log.Logger) string {
 		name = strings.Join(keepDirs, "/")
 	}
 	level.Info(logger).Log("msg", "Get name from path", "name", name, "pidPath", pidPath, "path", path, "dirs", fmt.Sprintf("+%v", dirs))
-	return pidPath
+	return name
 }
 
 
@@ -225,7 +225,6 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 			}
 			if !sliceContains(names, name) {
 				names = append(names, name)
-				level.Info(e.logger).Log("msg", name)
 			}
 			if val, ok := pids[name]; ok {
 				if !sliceContains(val, pid) {
