@@ -94,14 +94,8 @@ type CgroupMetric struct {
 	err             bool
 }
 
-func NewCgroupCollector(cgroupV2 bool, paths []string, logger log.Logger) Collector {
-	var collector Collector
-	if cgroupV2 {
-		collector = NewCgroupV2Collector(paths, logger)
-	} else {
-		collector = NewCgroupV1Collector(paths, logger)
-	}
-	return collector
+func NewCgroupV2Collector(paths []string, logger log.Logger) Collector {
+	return NewExporter(paths, logger, true)
 }
 
 func NewExporter(paths []string, logger log.Logger, cgroupv2 bool) *Exporter {
@@ -166,11 +160,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	var metrics []CgroupMetric
-	if e.cgroupv2 {
-		metrics, _ = e.collectv2()
-	} else {
-		metrics, _ = e.collectv1()
-	}
+	metrics, _ = e.collectv2()
 
 	for _, m := range metrics {
 		if m.err {
@@ -188,10 +178,6 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(e.memoryFailCount, prometheus.GaugeValue, m.memoryFailCount, m.name)
 		ch <- prometheus.MustNewConstMetric(e.memswUsed, prometheus.GaugeValue, m.memswUsed, m.name)
 		ch <- prometheus.MustNewConstMetric(e.memswTotal, prometheus.GaugeValue, m.memswTotal, m.name)
-		// These metrics currently have no cgroup v2 information
-		if !e.cgroupv2 {
-			ch <- prometheus.MustNewConstMetric(e.memswFailCount, prometheus.GaugeValue, m.memswFailCount, m.name)
-		}
 		if m.userslice || m.job {
 			ch <- prometheus.MustNewConstMetric(e.info, prometheus.GaugeValue, 1, m.name, m.username, m.uid, m.jobid)
 		}

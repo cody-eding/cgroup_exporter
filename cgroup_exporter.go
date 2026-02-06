@@ -44,11 +44,7 @@ func metricsHandler(logger log.Logger) http.HandlerFunc {
 
 		paths := strings.Split(*configPaths, ",")
 
-		var cgroupV2 bool
-		if cgroups.Mode() == cgroups.Unified {
-			cgroupV2 = true
-		}
-		cgroupCollector := collector.NewCgroupCollector(cgroupV2, paths, logger)
+		cgroupCollector := collector.NewCgroupV2Collector(paths, logger)
 		registry.MustRegister(cgroupCollector)
 		registry.MustRegister(versionCollector.NewCollector(fmt.Sprintf("%s_exporter", collector.Namespace)))
 
