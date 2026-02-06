@@ -38,13 +38,9 @@ var (
 func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger) {
 	dirs := strings.Split(name, "/")
 	var basename string
-	if strings.Contains(name, "slurm") {
-		keepDirs := dirs[0:3]
-		basename = strings.Join(keepDirs, "/")
-	} else {
-		keepDirs := dirs[0:2]
-		basename = strings.Join(keepDirs, "/")
-	}
+	keepDirs := dirs[0:3]
+	basename = strings.Join(keepDirs, "/")
+
 	slurmPattern := regexp.MustCompile("^" + basename + "/job_([0-9]+)(/step_([^/]+)(/user/task_([0-9]+|special))?)?$")
 	slurmMatch := slurmPattern.FindStringSubmatch(name)
 	level.Info(logger).Log("msg", "Got for match", "name", name, "len(slurmMatch)", len(slurmMatch), "slurmMatch", fmt.Sprintf("%v", slurmMatch))
@@ -104,7 +100,7 @@ func getNamev2(pidPath string, path string, logger log.Logger) string {
 		name = strings.Join(keepDirs, "/")
 	}
 	level.Info(logger).Log("msg", "Get name from path", "name", name, "pidPath", pidPath, "path", path, "dirs", fmt.Sprintf("+%v", dirs))
-	return name
+	return pidPath
 }
 
 
