@@ -120,30 +120,36 @@ func getNamev2(pidPath string, path string, logger *slog.Logger) []string {
 	return names
 }
 
-
 func getStatv2(name string, path string) (float64, error) {
-	if !fileExists(path) {
-		return 0, fmt.Errorf("path %s does not exist", path)
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return 0, err
-	}
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		parts := strings.Fields(s.Text())
-		if len(parts) != 2 {
-			return 0, cgroup2.ErrInvalidFormat
-		}
-		v, err := strconv.ParseUint(parts[1], 10, 64)
-		if err != nil {
-			return 0, cgroup2.ErrInvalidFormat
-		}
-		if parts[0] == name {
-			return float64(v), nil
-		}
-	}
-	return 0, fmt.Errorf("unable to find stat key %s in %s", name, path)
+    if !fileExists(path) {
+        return 0, fmt.Errorf("path %s does not exist", path)
+    }
+    f, err := os.Open(path)
+    if err != nil {
+        return 0, err
+    }
+    defer f.Close() 
+    
+    s := bufio.NewScanner(f)
+    for s.Scan() {
+        parts := strings.Fields(s.Text())
+        if len(parts) != 2 {
+            return 0, cgroup2.ErrInvalidFormat
+        }
+        v, err := strconv.ParseUint(parts[1], 10, 64)
+        if err != nil {
+            return 0, cgroup2.ErrInvalidFormat
+        }
+        if parts[0] == name {
+            return float64(v), nil
+        }
+    }
+    
+    if err := s.Err(); err != nil { 
+        return 0, err
+    }
+    
+    return 0, fmt.Errorf("unable to find stat key %s in %s", name, path)
 }
 
 func (e *Exporter) getMetricsv2(name string, pids []int, opts cgroup2.InitOpts) (CgroupMetric, error) {
