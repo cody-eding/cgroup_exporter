@@ -35,10 +35,10 @@ var (
 	PidGroupPath = cgroup2.PidGroupPath
 )
 
-func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger) {
+func getInfov2(name string, pids []int, metric *CgroupMetric, logger *slog.Logger) {
 	slurmPattern := regexp.MustCompile("/job_([0-9]+)(/step_([^/]+)(/user/task_([0-9]+|special))?)?$")
 	slurmMatch := slurmPattern.FindStringSubmatch(name)
-	level.Debug(logger).Log("msg", "Got for match", "name", name, "len(slurmMatch)", len(slurmMatch), "slurmMatch", fmt.Sprintf("%v", slurmMatch))
+	logger.Debug("Got for match", "name", name, "len(slurmMatch)", len(slurmMatch), "slurmMatch", fmt.Sprintf("%v", slurmMatch))
 	if len(slurmMatch) == 6 {
 		metric.job = true
 		metric.jobid = slurmMatch[1]
@@ -46,19 +46,19 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 		metric.task = slurmMatch[5]
 		procFS, err := procfs.NewFS(*ProcRoot)
 		if err != nil {
-			level.Error(logger).Log("msg", "Unable to get procfs", "root", *ProcRoot, "err", err)
+			logger.Error("Unable to get procfs", "root", *ProcRoot, "err", err)
 			return
 		}
 		var proc procfs.Proc
 		for _, pid := range pids {
 			proc, err = procFS.Proc(pid)
 			if err != nil {
-				level.Error(logger).Log("msg", "Unable to read PID", "pid", pid, "err", err)
+				logger.Error("Unable to read PID", "pid", pid, "err", err)
 				return
 			}
 			exec, err := proc.Executable()
 			if err != nil {
-				level.Error(logger).Log("msg", "Unable to read process executable", "pid", pid, "err", err)
+				logger.Error("Unable to read process executable", "pid", pid, "err", err)
 				return
 			}
 			if filepath.Base(exec) != "sleep" && filepath.Base(exec) != "slurmstepd" {
@@ -67,7 +67,7 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 		}
 		procStat, err := proc.NewStatus()
 		if err != nil {
-			level.Error(logger).Log("msg", "Unable to get proc status for PID", "pid", proc.PID, "err", err)
+			logger.Error("Unable to get proc status for PID", "pid", proc.PID, "err", err)
 			return
 		}
 		// effective UID
@@ -75,7 +75,7 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 		metric.uid = strconv.FormatUint(uid, 10)
 		user, err := user.LookupId(metric.uid)
 		if err != nil {
-			level.Error(logger).Log("msg", "Error looking up slurm uid", "uid", metric.uid, "err", err)
+			logger.Error("Error looking up slurm uid", "uid", metric.uid, "err", err)
 			return
 		}
 		metric.username = user.Username
@@ -83,7 +83,7 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger log.Logger)
 	}
 }
 
-func getNamev2(pidPath string, path string, logger log.Logger) []string {
+func getNamev2(pidPath string, path string, logger *slog.Logger) []string {
 	dirs := strings.Split(pidPath, "/")
 	var names []string
 	
@@ -116,7 +116,7 @@ func getNamev2(pidPath string, path string, logger log.Logger) []string {
 		names = append(names, pidPath)
 	}
 	
-	level.Debug(logger).Log("msg", "Get names from path", "names", fmt.Sprintf("%v", names), "pidPath", pidPath, "path", path)
+	logger.Debug("Get names from path", "names", fmt.Sprintf("%v", names), "pidPath", pidPath, "path", path)
 	return names
 }
 
@@ -148,21 +148,21 @@ func getStatv2(name string, path string) (float64, error) {
 
 func (e *Exporter) getMetricsv2(name string, pids []int, opts cgroup2.InitOpts) (CgroupMetric, error) {
 	metric := CgroupMetric{name: name}
-	level.Debug(e.logger).Log("msg", "Loading cgroup", "path", name)
+	e.logger.Debug("Loading cgroup", "path", name)
 	ctrl, err := cgroup2.Load(name, opts)
 	if err != nil {
-		level.Error(e.logger).Log("msg", "Failed to load cgroups", "path", name, "err", err)
+		e.logger.Error("Failed to load cgroups", "path", name, "err", err)
 		metric.err = true
 		return metric, err
 	}
 	stats, err := ctrl.Stat()
 	if err != nil {
-		level.Error(e.logger).Log("msg", "Failed to get cgroup stats", "path", name)
+		e.logger.Error("Failed to get cgroup stats", "path", name)
 		metric.err = true
 		return metric, err
 	}
 	if stats == nil {
-		level.Error(e.logger).Log("msg", "Cgroup stats are nil", "path", name)
+		e.logger.Error("Cgroup stats are nil", "path", name)
 		metric.err = true
 		return metric, err
 	}
@@ -175,7 +175,7 @@ func (e *Exporter) getMetricsv2(name string, pids []int, opts cgroup2.InitOpts) 
 	// memoryStatPath := filepath.Join(*CgroupRoot, name, "memory.stat")
 	// swapcached, err := getStatv2("swapcached", memoryStatPath)
 	// if err != nil {
-	// 	level.Error(e.logger).Log("msg", "Unable to get swapcached", "path", name, "err", err)
+	// 	e.logger.Error("Unable to get swapcached", "path", name, "err", err)
 	// 	metric.err = true
 	// 	return metric, err
 	// }
@@ -208,42 +208,42 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 	for _, path := range e.paths {
 		var group string
 		group = path
-		level.Debug(e.logger).Log("msg", "Loading cgroup", "path", path, "group", group, "root", *CgroupRoot)
+		e.logger.Debug("Loading cgroup", "path", path, "group", group, "root", *CgroupRoot)
 		//TODO
 		//control, err := cgroup2.LoadSystemd(path, group)
 		opts := cgroup2.WithMountpoint(*CgroupRoot)
 		control, err := cgroup2.Load(group, opts)
 		if err != nil {
-			level.Error(e.logger).Log("msg", "Error loading cgroup", "path", path, "group", group, "err", err)
+			e.logger.Error("Error loading cgroup", "path", path, "group", group, "err", err)
 			metric := CgroupMetric{name: path, err: true}
 			metrics = append(metrics, metric)
 			continue
 		}
 		processes, err := control.Procs(true)
 		if err != nil {
-			level.Error(e.logger).Log("msg", "Error loading cgroup processes", "path", path, "group", group, "err", err)
+			e.logger.Error("Error loading cgroup processes", "path", path, "group", group, "err", err)
 			metric := CgroupMetric{name: path, err: true}
 			metrics = append(metrics, metric)
 			continue
 		}
-		level.Debug(e.logger).Log("msg", "Found processes", "path", path, "group", group, "processes", len(processes))
+		e.logger.Debug("Found processes", "path", path, "group", group, "processes", len(processes))
 		pids := make(map[string][]int)
 		for _, p := range processes {
 			pid := int(p)
 			pidPath, err := PidGroupPath(pid)
 			if err != nil {
-				level.Error(e.logger).Log("msg", "Error getting PID group path", "path", path, "group", group, "pid", pid, "err", err)
+				e.logger.Error("Error getting PID group path", "path", path, "group", group, "pid", pid, "err", err)
 				continue
 			}
-			level.Debug(e.logger).Log("msg", "Get Name", "pid", pid, "path", path)
+			e.logger.Debug("Get Name", "pid", pid, "path", path)
 			nameList := getNamev2(pidPath, path, e.logger)
 			for _, name := range nameList {
 				if strings.Contains(path, "slurm") && filepath.Base(name) == "system" {
-					level.Debug(e.logger).Log("msg", "Skip system cgroup", "name", name)
+					e.logger.Debug("Skip system cgroup", "name", name)
 					continue
 				}
 				if strings.Contains(path, "slurm") && strings.HasSuffix(name, "/slurm") {
-					level.Debug(e.logger).Log("msg", "Skip slurm cgroup", "name", name)
+					e.logger.Debug("Skip slurm cgroup", "name", name)
 					continue
 				}
 				if !sliceContains(names, name) {
@@ -268,7 +268,7 @@ func (e *Exporter) collectv2() ([]CgroupMetric, error) {
 				if val, ok := p[n]; ok {
 					pids = val
 				} else {
-					level.Error(e.logger).Log("msg", "Unable to get PIDs for name", "name", n)
+					e.logger.Error("Unable to get PIDs for name", "name", n)
 					return
 				}
 				metric, _ := e.getMetricsv2(n, pids, opts)
