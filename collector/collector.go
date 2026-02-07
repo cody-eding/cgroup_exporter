@@ -62,7 +62,7 @@ type Exporter struct {
 	memswTotal      *prometheus.Desc
 	memswFailCount  *prometheus.Desc
 	info            *prometheus.Desc
-	uid				*prometheus.Desc
+	uid             *prometheus.Desc
 	logger          *slog.Logger
 }
 
@@ -86,8 +86,8 @@ type CgroupMetric struct {
 	uid             string
 	username        string
 	jobid           string
-	step  			string
-	task  			string
+	step            string
+	task            string
 	err             bool
 }
 
@@ -130,7 +130,7 @@ func NewExporter(paths []string, logger *slog.Logger) *Exporter {
 			"User slice information", []string{"cgroup", "username", "uid", "jobid"}, nil),
 		collectError: prometheus.NewDesc(prometheus.BuildFQName(Namespace, "exporter", "collect_error"),
 			"Indicates collection error, 0=no error, 1=error", []string{"cgroup"}, nil),
-		logger:   logger,
+		logger: logger,
 	}
 }
 

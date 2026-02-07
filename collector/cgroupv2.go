@@ -86,12 +86,12 @@ func getInfov2(name string, pids []int, metric *CgroupMetric, logger *slog.Logge
 func getNamev2(pidPath string, path string, logger *slog.Logger) []string {
 	dirs := strings.Split(pidPath, "/")
 	var names []string
-	
+
 	if strings.Contains(path, "slurm") {
 		// for slurm paths, collect at multiple levels:
 		// 1) full task path (e.g., job_X/step_Y/user/task_Z)
 		// 2) job level (e.g., job_X)
-		
+
 		// Find the job_* index
 		jobIdx := -1
 		for i, dir := range dirs {
@@ -100,13 +100,13 @@ func getNamev2(pidPath string, path string, logger *slog.Logger) []string {
 				break
 			}
 		}
-		
+
 		if jobIdx >= 0 {
 			// Add the full path
 			names = append(names, pidPath)
-			
+
 			// Add the job level only (just up to job_X)
-			jobLevelDirs := dirs[0:jobIdx+1]
+			jobLevelDirs := dirs[0 : jobIdx+1]
 			jobLevelName := strings.Join(jobLevelDirs, "/")
 			names = append(names, jobLevelName)
 		} else {
@@ -115,41 +115,41 @@ func getNamev2(pidPath string, path string, logger *slog.Logger) []string {
 	} else {
 		names = append(names, pidPath)
 	}
-	
+
 	logger.Debug("Get names from path", "names", fmt.Sprintf("%v", names), "pidPath", pidPath, "path", path)
 	return names
 }
 
 func getStatv2(name string, path string) (float64, error) {
-    if !fileExists(path) {
-        return 0, fmt.Errorf("path %s does not exist", path)
-    }
-    f, err := os.Open(path)
-    if err != nil {
-        return 0, err
-    }
-    defer f.Close() 
-    
-    s := bufio.NewScanner(f)
-    for s.Scan() {
-        parts := strings.Fields(s.Text())
-        if len(parts) != 2 {
-            return 0, cgroup2.ErrInvalidFormat
-        }
-        v, err := strconv.ParseUint(parts[1], 10, 64)
-        if err != nil {
-            return 0, cgroup2.ErrInvalidFormat
-        }
-        if parts[0] == name {
-            return float64(v), nil
-        }
-    }
-    
-    if err := s.Err(); err != nil { 
-        return 0, err
-    }
-    
-    return 0, fmt.Errorf("unable to find stat key %s in %s", name, path)
+	if !fileExists(path) {
+		return 0, fmt.Errorf("path %s does not exist", path)
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		parts := strings.Fields(s.Text())
+		if len(parts) != 2 {
+			return 0, cgroup2.ErrInvalidFormat
+		}
+		v, err := strconv.ParseUint(parts[1], 10, 64)
+		if err != nil {
+			return 0, cgroup2.ErrInvalidFormat
+		}
+		if parts[0] == name {
+			return float64(v), nil
+		}
+	}
+
+	if err := s.Err(); err != nil {
+		return 0, err
+	}
+
+	return 0, fmt.Errorf("unable to find stat key %s in %s", name, path)
 }
 
 func (e *Exporter) getMetricsv2(name string, pids []int, opts cgroup2.InitOpts) (CgroupMetric, error) {
