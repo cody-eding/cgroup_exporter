@@ -84,7 +84,7 @@ func main() {
 	http.Handle(metricsEndpoint, metricsHandler(logger))
 	err := http.ListenAndServe(*listenAddress, nil)
 	if err != nil {
-    	logger.Error("Operation failed", "err", err)
+		logger.Error("Operation failed", "err", err)
 		os.Exit(1)
 	}
 }

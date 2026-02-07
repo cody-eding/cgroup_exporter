@@ -16,12 +16,10 @@ package collector
 
 import (
 	"os"
-	"log/slog"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"testing"
-
 )
 
 func TestMain(m *testing.M) {
@@ -31,8 +29,6 @@ func TestMain(m *testing.M) {
 	CgroupRoot = &fixture
 	procFixture := filepath.Join(fixture, "proc")
 	ProcRoot = &procFixture
-	varTrue := true
-	collectProc = &varTrue
 
 	exitVal := m.Run()
 

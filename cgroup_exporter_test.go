@@ -55,9 +55,9 @@ func TestMain(m *testing.M) {
 		fmt.Printf("Error: %s", err.Error())
 		os.Exit(1)
 	}
-	w := log.NewSyncWriter(os.Stderr)
-	logger := log.NewLogfmtLogger(w)
-	logger = level.NewFilter(logger, level.AllowDebug())
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
 	go func() {
 		http.Handle("/metrics", metricsHandler(logger))
 		err := http.ListenAndServe(address, nil)

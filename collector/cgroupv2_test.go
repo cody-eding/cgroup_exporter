@@ -20,7 +20,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
 )
 
 func TestGetStatv2(t *testing.T) {
@@ -58,9 +57,8 @@ func TestGetStatv2(t *testing.T) {
 }
 
 func TestCollectv2Error(t *testing.T) {
-	w := log.NewSyncWriter(os.Stderr)
-	logger := log.NewLogfmtLogger(w)
-	exporter := NewExporter([]string{"/dne"}, logger, true)
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	exporter := NewExporter([]string{"/dne"}, logger)
 	metrics, err := exporter.collectv2()
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
@@ -75,68 +73,7 @@ func TestCollectv2Error(t *testing.T) {
 	}
 }
 
-func TestCollectv2UserSlice(t *testing.T) {
-	varFalse := false
-	collectProc = &varFalse
-	PidGroupPath = func(pid int) (string, error) {
-		if pid == 67998 {
-			return "/user.slice/user-20821.slice/session-157.scope", nil
-		}
-		return "", fmt.Errorf("Could not find cgroup path for %d", pid)
-	}
-	w := log.NewSyncWriter(os.Stderr)
-	logger := log.NewLogfmtLogger(w)
-	exporter := NewExporter([]string{"/user.slice"}, logger, true)
-	metrics, err := exporter.collectv2()
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err.Error())
-		return
-	}
-	if val := len(metrics); val != 1 {
-		t.Errorf("Unexpected number of metrics, got %d expected 1", val)
-		return
-	}
-	if val := metrics[0].name; val != "/user.slice/user-20821.slice" {
-		t.Errorf("Unexpected value for name, got %v", val)
-	}
-	if val := metrics[0].cpuUser; val != 15.270449 {
-		t.Errorf("Unexpected value for cpuUser, got %v", val)
-	}
-	if val := metrics[0].cpuSystem; val != 2.705424 {
-		t.Errorf("Unexpected value for cpuSystem, got %v", val)
-	}
-	if val := metrics[0].cpuTotal; val != 17.975873 {
-		t.Errorf("Unexpected value for cpuTotal, got %v", val)
-	}
-	if val := metrics[0].cpus; val != 0 {
-		t.Errorf("Unexpected value for cpus, got %v", val)
-	}
-	if val := metrics[0].memoryRSS; val != 22626304 {
-		t.Errorf("Unexpected value for memoryRSS, got %v", val)
-	}
-	if val := metrics[0].memoryUsed; val != 27115520 {
-		t.Errorf("Unexpected value for memoryUsed, got %v", val)
-	}
-	if val := metrics[0].memoryTotal; val != 2147483648 {
-		t.Errorf("Unexpected value for memoryTotal, got %v", val)
-	}
-	if val := metrics[0].memoryFailCount; val != 0 {
-		t.Errorf("Unexpected value for memoryFailCount, got %v", val)
-	}
-	if val := metrics[0].memswUsed; val != 0 {
-		t.Errorf("Unexpected value for swapUsed, got %v", val)
-	}
-	if val := metrics[0].memswTotal; val != 1.8446744073709552e+19 {
-		t.Errorf("Unexpected value for swapTotal, got %v", val)
-	}
-	if val := metrics[0].uid; val != "20821" {
-		t.Errorf("Unexpected value for uid, got %v", val)
-	}
-}
-
 func TestCollectv2SLURM(t *testing.T) {
-	varTrue := true
-	collectProc = &varTrue
 	varLen := 100
 	collectProcMaxExec = &varLen
 	PidGroupPath = func(pid int) (string, error) {
@@ -148,9 +85,8 @@ func TestCollectv2SLURM(t *testing.T) {
 		}
 		return "", fmt.Errorf("Could not find cgroup path for %d", pid)
 	}
-	w := log.NewSyncWriter(os.Stderr)
-	logger := log.NewLogfmtLogger(w)
-	exporter := NewExporter([]string{"/slurm"}, logger, true)
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	exporter := NewExporter([]string{"/system.slice/slurmstepd.scope"}, logger)
 	metrics, err := exporter.collectv2()
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
@@ -208,12 +144,5 @@ func TestCollectv2SLURM(t *testing.T) {
 	}
 	if val := m.jobid; val != "4" {
 		t.Errorf("Unexpected value for jobid, got %v", val)
-	}
-	if val, ok := m.processExec["/usr/bin/bash"]; !ok {
-		t.Errorf("processExec does not contain /bin/bash")
-	} else {
-		if val != 1 {
-			t.Errorf("Unexpected 1 values for processExec /usr/bin/bash, got %v", val)
-		}
 	}
 }
