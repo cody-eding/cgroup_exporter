@@ -91,7 +91,7 @@ type CgroupMetric struct {
 	err             bool
 }
 
-func NewCgroupV2Collector(paths []string, logger log.Logger) Collector {
+func NewCgroupV2Collector(paths []string, logger *slog.Logger) Collector {
 	return NewExporter(paths, logger)
 }
 
@@ -228,12 +228,12 @@ func getCPUs(path string, logger log.Logger) ([]string, error) {
 	}
 	cpusData, err := os.ReadFile(path)
 	if err != nil {
-		level.Error(logger).Log("msg", "Error reading cpuset", "cpuset", path, "err", err)
+		logger.Error("Error reading cpuset", "cpuset", path, "err", err)
 		return nil, err
 	}
 	cpus, err := parseCpuSet(strings.TrimSuffix(string(cpusData), "\n"))
 	if err != nil {
-		level.Error(logger).Log("msg", "Error parsing cpu set", "cpuset", path, "err", err)
+		logger.Error("Error parsing cpu set", "cpuset", path, "err", err)
 		return nil, err
 	}
 	return cpus, nil
