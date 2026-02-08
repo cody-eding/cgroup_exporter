@@ -21,8 +21,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GVSU-Advanced-Research-Computing/jobstats_cgroup_exporter/collector"
 	"github.com/alecthomas/kingpin/v2"
+	"github.com/cody-eding/jobstats_cgroup_exporter/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	versionCollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
