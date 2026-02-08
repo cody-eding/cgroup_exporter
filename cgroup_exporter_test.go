@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GVSU-Advanced-Research-Computing/jobstats_cgroup_exporter/collector"
 	kingpin "github.com/alecthomas/kingpin/v2"
+	"github.com/cody-eding/jobstats_cgroup_exporter/collector"
 )
 
 const (
